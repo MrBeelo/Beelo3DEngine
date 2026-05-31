@@ -74,12 +74,30 @@ CheckCollisionPlaneBoxEx :: proc(plane: rl.Vector4, box: rl.BoundingBox) -> int 
 }
 
 FrustumContainsBox :: proc(frustum: Frustum, box: rl.BoundingBox) -> bool {
-	if(CheckCollisionPlaneBoxEx(frustum.up, box) == BOX_ALL_CORNERS) do return false ;
-	if(CheckCollisionPlaneBoxEx(frustum.down, box) == BOX_ALL_CORNERS) do return false ;
-	if(CheckCollisionPlaneBoxEx(frustum.left, box) == BOX_ALL_CORNERS) do return false ;
-	if(CheckCollisionPlaneBoxEx(frustum.right, box) == BOX_ALL_CORNERS) do return false ;
-	if(CheckCollisionPlaneBoxEx(frustum.near, box) == BOX_ALL_CORNERS) do return false ;
-	if(CheckCollisionPlaneBoxEx(frustum.far, box) == BOX_ALL_CORNERS) do return false ;
+	if(CheckCollisionPlaneBoxEx(frustum.up, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneBoxEx(frustum.down, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneBoxEx(frustum.left, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneBoxEx(frustum.right, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneBoxEx(frustum.near, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneBoxEx(frustum.far, box) == BOX_ALL_CORNERS) do return false
 
-	return true;
+	return true
+}
+
+CheckCollisionPlaneOBBEx :: proc(plane: rl.Vector4, box: OBB) -> int {
+	corners := BOX_NO_CORNER
+	points := GetOBBCorners(box)
+	for i in 0..=7 do if CheckCollisionPlanePoint(plane, points[i]) do corners |= 1 << uint(i)
+	return corners
+}
+
+FrustumContainsOBB :: proc(frustum: Frustum, box: OBB) -> bool {
+	if(CheckCollisionPlaneOBBEx(frustum.up, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneOBBEx(frustum.down, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneOBBEx(frustum.left, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneOBBEx(frustum.right, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneOBBEx(frustum.near, box) == BOX_ALL_CORNERS) do return false
+	if(CheckCollisionPlaneOBBEx(frustum.far, box) == BOX_ALL_CORNERS) do return false
+
+	return true
 }

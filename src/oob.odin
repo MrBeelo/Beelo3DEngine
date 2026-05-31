@@ -8,23 +8,49 @@ OBB :: struct {
 	half_size: rl.Vector3
 }
 
-DrawOOB :: proc(obb: OBB, offset := f32(0.03), color := rl.RED) {
-	hx := obb.axis.x * (obb.half_size.x + offset)
-	hy := obb.axis.y * (obb.half_size.y + offset)
-	hz := obb.axis.z * (obb.half_size.z + offset)
+GetOBBCorners :: proc(box: OBB, offset := f32(0)) -> [8]rl.Vector3 {
+	hx := box.axis.x * (box.half_size.x + offset)
+    hy := box.axis.y * (box.half_size.y + offset)
+    hz := box.axis.z * (box.half_size.z + offset)
+    
+	return [?]rl.Vector3{
+		box.center - hx - hy - hz, box.center + hx - hy - hz,
+		box.center + hx + hy - hz, box.center - hx + hy - hz,
+		box.center - hx - hy + hz, box.center + hx - hy + hz,
+		box.center + hx + hy + hz, box.center - hx + hy + hz
+	}
+}
 
-	corners := [?]rl.Vector3{
-    	obb.center - hx - hy - hz,
-     	obb.center + hx - hy - hz,
-     	obb.center + hx + hy - hz,
-     	obb.center - hx + hy - hz,
+ProjectOBB :: proc(box: OBB, axis: rl.Vector3) -> rl.Vector2 {
+    corners := GetOBBCorners(box)
+    points: [8]f32
+    for i in 0..=7 do points[i] = rl.Vector3DotProduct(axis, corners[i])
+    return {array_min(points[:]), array_max(points[:])}
+}
 
-      	obb.center - hx - hy + hz,
-       	obb.center + hx - hy + hz,
-        obb.center + hx + hy + hz,
-        obb.center - hx + hy + hz,
+CheckOBBPointOverlap :: proc(points1, points2: rl.Vector2) -> bool { return points2.x <= points1.y && points1.x <= points2.y }
+
+CheckCollisionOBB :: proc(box1, box2: OBB) -> bool {
+	axes := [?]rl.Vector3 {
+		box1.axis.x, box1.axis.y, box1.axis.z,
+		box2.axis.x, box2.axis.y, box2.axis.z,
+		rl.Vector3CrossProduct(box1.axis.x, box2.axis.x),
+		rl.Vector3CrossProduct(box1.axis.x, box2.axis.y),
+		rl.Vector3CrossProduct(box1.axis.x, box2.axis.z),
+		rl.Vector3CrossProduct(box1.axis.y, box2.axis.x),
+		rl.Vector3CrossProduct(box1.axis.y, box2.axis.y),
+		rl.Vector3CrossProduct(box1.axis.y, box2.axis.z),
+		rl.Vector3CrossProduct(box1.axis.z, box2.axis.x),
+		rl.Vector3CrossProduct(box1.axis.z, box2.axis.y),
+		rl.Vector3CrossProduct(box1.axis.z, box2.axis.z)
 	}
 	
+	for axis in axes do if !CheckOBBPointOverlap(ProjectOBB(box1, axis), ProjectOBB(box2, axis)) do return false
+	return true
+}
+
+DrawOOB :: proc(box: OBB, offset := f32(0.01), color := rl.RED) {
+	corners := GetOBBCorners(box, offset)
 	rl.DrawLine3D(corners[0], corners[1], color)
 	rl.DrawLine3D(corners[1], corners[2], color)
 	rl.DrawLine3D(corners[2], corners[3], color)
@@ -37,4 +63,9 @@ DrawOOB :: proc(obb: OBB, offset := f32(0.03), color := rl.RED) {
 	rl.DrawLine3D(corners[1], corners[5], color)
 	rl.DrawLine3D(corners[2], corners[6], color)
 	rl.DrawLine3D(corners[3], corners[7], color)
+}
+
+OBBIsColliding :: proc(box: OBB) -> bool {
+	for obj in objects do if CheckCollisionOBB(box, obj.box) do return true
+	return false
 }

@@ -3,15 +3,16 @@ package main
 import "core:mem"
 import rl "vendor:raylib"
 
-cube_model_cache: map[struct{scale: rl.Vector3, tile: bool}]rl.Model
+cube_mesh_cache: map[struct{scale: rl.Vector3, tile: bool}]rl.Mesh
 
 NewCube :: proc(pos: rl.Vector3, rot: rl.Vector3, scale: rl.Vector3, texture := TextureType.GRAY, tile := true, 
 props := ObjectProperties{true, false, true, .XYZ}) -> Object {
-	model: rl.Model
-	if cached_model, ok := cube_model_cache[{scale, tile}]; ok do model = cached_model; else {
-		model = rl.LoadModelFromMesh(GenCustomCubeMesh(scale, tile))
-		cube_model_cache[{scale, tile}] = model
+	mesh: rl.Mesh
+	if cached_mesh, ok := cube_mesh_cache[{scale, tile}]; ok do mesh = cached_mesh; else {
+		mesh = GenCustomCubeMesh(scale, tile)
+		cube_mesh_cache[{scale, tile}] = mesh
 	}
+	model := rl.LoadModelFromMesh(mesh)
 	model.materials[0].maps[0].texture = textures[texture]
 	return Object{pos, rot, model, GetCubeOBB(pos, rot, scale, props.rotation_order), props}
 }

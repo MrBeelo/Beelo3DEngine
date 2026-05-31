@@ -1,7 +1,5 @@
 package main
 
-import "core:fmt"
-
 import rl "vendor:raylib"
 
 SCREEN_SIZE :: rl.Vector2{1920, 1080}
@@ -18,6 +16,7 @@ main :: proc() {
     player = NewPlayer()
     
     append(&objects, NewCube({2, 0, 2}, {30, 0, 0}, {1, 1, 2}, .GRAY))
+    append(&objects, NewCube({3, 0, 3}, {0, 0, 30}, {1, 1, 2}, .GREEN))
         
     for !rl.WindowShouldClose() {
     	UpdatePlayer(&player)

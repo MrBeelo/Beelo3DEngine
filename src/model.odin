@@ -1,12 +1,11 @@
 package main
 
 import rl "vendor:raylib"
-import "core:math"
 
 MatrixRotationOrder :: enum{ XYZ, XZY, YXZ, YZX, ZXY, ZYX }
 
 MatrixRotateGeneral :: proc(vector: rl.Vector3, order: MatrixRotationOrder) -> rl.Matrix {
-	v := RotInRadians(vector)
+	v := rot_rad(vector)
 	rx := rl.MatrixRotateX(v.x)
 	ry := rl.MatrixRotateY(v.y)
     rz := rl.MatrixRotateZ(v.z)
@@ -22,7 +21,7 @@ MatrixRotateGeneral :: proc(vector: rl.Vector3, order: MatrixRotationOrder) -> r
     return rx * ry * rz
 }
 
-DrawModelPro :: proc(model: ^rl.Model, position: rl.Vector3, rotation: rl.Vector3, scale: rl.Vector3, tint: rl.Color, order: MatrixRotationOrder = MatrixRotationOrder.XYZ) {
+DrawModelPro :: proc(model: rl.Model, position: rl.Vector3, rotation: rl.Vector3, scale: rl.Vector3, tint: rl.Color, order: MatrixRotationOrder = MatrixRotationOrder.XYZ) {
     matScale := rl.MatrixScale(scale.x, scale.y, scale.z)
     matRotation := MatrixRotateGeneral(rotation, order)
     matTranslation := rl.MatrixTranslate(position.x, position.y, position.z)
@@ -42,8 +41,4 @@ DrawModelPro :: proc(model: ^rl.Model, position: rl.Vector3, rotation: rl.Vector
         rl.DrawMesh(model.meshes[i], mat, matTransform)
         mat.maps[rl.MaterialMapIndex.ALBEDO].color = colDiffuse
     }
-}
-
-RotInRadians :: proc(v: rl.Vector3) -> rl.Vector3 {
-	return {math.to_radians(v.x), math.to_radians(v.y), math.to_radians(v.z)}
 }
