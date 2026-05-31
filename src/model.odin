@@ -1,12 +1,12 @@
 package main
 
-import "core:mem"
 import rl "vendor:raylib"
 import "core:math"
 
 MatrixRotationOrder :: enum{ XYZ, XZY, YXZ, YZX, ZXY, ZYX }
 
-MatrixRotateGeneral :: proc(v: rl.Vector3, order: MatrixRotationOrder) -> rl.Matrix {
+MatrixRotateGeneral :: proc(vector: rl.Vector3, order: MatrixRotationOrder) -> rl.Matrix {
+	v := RotInRadians(vector)
 	rx := rl.MatrixRotateX(v.x)
 	ry := rl.MatrixRotateY(v.y)
     rz := rl.MatrixRotateZ(v.z)
@@ -24,7 +24,7 @@ MatrixRotateGeneral :: proc(v: rl.Vector3, order: MatrixRotationOrder) -> rl.Mat
 
 DrawModelPro :: proc(model: ^rl.Model, position: rl.Vector3, rotation: rl.Vector3, scale: rl.Vector3, tint: rl.Color, order: MatrixRotationOrder = MatrixRotationOrder.XYZ) {
     matScale := rl.MatrixScale(scale.x, scale.y, scale.z)
-    matRotation := MatrixRotateGeneral(RotInRadians(rotation), order)
+    matRotation := MatrixRotateGeneral(rotation, order)
     matTranslation := rl.MatrixTranslate(position.x, position.y, position.z)
     matTransform := matTranslation * matRotation * matScale
 

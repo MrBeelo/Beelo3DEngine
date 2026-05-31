@@ -13,7 +13,15 @@ props := ObjectProperties{true, false, true, .XYZ}) -> Object {
 		cube_model_cache[{scale, tile}] = model
 	}
 	model.materials[0].maps[0].texture = textures[texture]
-	return Object{pos, rot, model, {}, props}
+	return Object{pos, rot, model, GetCubeOBB(pos, rot, scale, props.rotation_order), props}
+}
+
+GetCubeOBB :: proc(pos: rl.Vector3, rot: rl.Vector3, scale: rl.Vector3, order: MatrixRotationOrder) -> OBB {
+	rm := MatrixRotateGeneral(rot, order)
+	axis_x := rl.Vector3{rm[0, 0], rm[1, 0], rm[2, 0]}
+	axis_y := rl.Vector3{rm[0, 1], rm[1, 1], rm[2, 1]}
+	axis_z := rl.Vector3{rm[0, 2], rm[1, 2], rm[2, 2]}
+	return {pos, {axis_x, axis_y, axis_z}, scale / 2}
 }
 
 GenCustomCubeMesh :: proc(scale: rl.Vector3, tile: bool = true) -> rl.Mesh {

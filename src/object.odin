@@ -11,13 +11,12 @@ ObjectProperties :: struct {
 	should_draw: bool,
 	rotation_order: MatrixRotationOrder
 }
-DefaultObjectProperties :: proc() -> ObjectProperties { return {true, false, true, .XYZ} }
 
 Object :: struct {
 	pos: rl.Vector3,
 	rot: rl.Vector3,
 	model: Maybe(rl.Model),
-	box: OOB,
+	box: OBB,
 	props: ObjectProperties
 }
 
@@ -27,4 +26,5 @@ DrawObject :: proc(obj: ^Object) {
 	//is_seen := FrustumContainsBox(GetFrustumFromCamera(&player.camera, f32(SCREEN_SIZE.x / SCREEN_SIZE.y)), rl.GetModelBoundingBox(obj.model))
 	if !obj.props.should_draw || obj.model == nil do return // if !is_seen && !obj.props.force_draw
 	DrawModelPro(&obj.model.?, obj.pos, obj.rot, 1, rl.WHITE, obj.props.rotation_order)
+	if debug_on do DrawOOB(obj.box)
 }

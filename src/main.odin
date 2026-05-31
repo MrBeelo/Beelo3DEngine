@@ -17,7 +17,7 @@ main :: proc() {
     defer UnloadTextures()
     player = NewPlayer()
     
-    append(&objects, NewCube({2, 0, 2}, {0, 30, 30}, {1, 1, 2}, .GRAY))
+    append(&objects, NewCube({2, 0, 2}, {30, 0, 0}, {1, 1, 2}, .GRAY))
         
     for !rl.WindowShouldClose() {
     	UpdatePlayer(&player)
