@@ -13,10 +13,14 @@ main :: proc() {
     defer rl.CloseWindow()
     rl.DisableCursor()
     
-    player = new_player()
+    LoadTextures()
+    defer UnloadTextures()
+    player = NewPlayer()
+    
+    append(&objects, NewCube({2, 0, 2}, {0, 30, 30}, {1, 1, 2}, .GRAY))
         
     for !rl.WindowShouldClose() {
-    	update_player(&player)
+    	UpdatePlayer(&player)
      	if rl.IsKeyPressed(.F3) do debug_on = !debug_on
      
         rl.BeginDrawing()
@@ -25,9 +29,10 @@ main :: proc() {
         
         rl.BeginMode3D(player.camera)
         rl.DrawGrid(100, 0.2)
+        DrawObjects()
         rl.EndMode3D()
         
-        draw_crosshair()
-        draw_debug()
+        DrawCrosshair()
+        DrawDebug()
     }
 }

@@ -15,11 +15,11 @@ Player :: struct {
 	rot: rl.Vector2
 }
 
-new_player :: proc() -> Player {
-	return Player{.NORMAL, {{0, 0.5, 0}, {1, 0.5, 1}, {0, 1, 0}, 60, .PERSPECTIVE}, {0, 0.5, 0}, {1, 0, 1}, 0, 0}
+NewPlayer :: proc() -> Player {
+	return Player{.FREECAM, {{0, 0.5, 0}, {1, 0.5, 1}, {0, 1, 0}, 60, .PERSPECTIVE}, {0, 0.5, 0}, {1, 0, 1}, 0, 0}
 }
 
-update_player :: proc(plr: ^Player) {
+UpdatePlayer :: proc(plr: ^Player) {
 	speed := rl.GetFrameTime() * BASE_SPEED * (2 if rl.IsKeyDown(.LEFT_SHIFT) else 1)
 	plr.rot.x -= rl.GetMouseDelta().x * SENSITIVITY
 	plr.rot.y = max(-1.57, min(1.57, plr.rot.y - rl.GetMouseDelta().y * SENSITIVITY))
@@ -43,7 +43,7 @@ update_player :: proc(plr: ^Player) {
 	plr.camera.target = plr.pos + plr.dir
 }
 
-draw_crosshair :: proc() {
+DrawCrosshair :: proc() {
 	LINE_SIZE :: 30
 	DSCR_X :: SCREEN_SIZE.x / 2
 	DSCR_Y :: SCREEN_SIZE.y / 2
