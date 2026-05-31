@@ -16,7 +16,7 @@ DefaultObjectProperties :: proc() -> ObjectProperties { return {true, false, tru
 Object :: struct {
 	pos: rl.Vector3,
 	rot: rl.Vector3,
-	model: rl.Model,
+	model: Maybe(rl.Model),
 	box: OOB,
 	props: ObjectProperties
 }
@@ -25,6 +25,6 @@ DrawObjects :: proc() { for &obj in objects do DrawObject(&obj) }
 
 DrawObject :: proc(obj: ^Object) {
 	//is_seen := FrustumContainsBox(GetFrustumFromCamera(&player.camera, f32(SCREEN_SIZE.x / SCREEN_SIZE.y)), rl.GetModelBoundingBox(obj.model))
-	if !obj.props.should_draw do return // if !is_seen && !obj.props.force_draw
-	DrawModelPro(&obj.model, obj.pos, obj.rot, 1, rl.WHITE, obj.props.rotation_order)
+	if !obj.props.should_draw || obj.model == nil do return // if !is_seen && !obj.props.force_draw
+	DrawModelPro(&obj.model.?, obj.pos, obj.rot, 1, rl.WHITE, obj.props.rotation_order)
 }
