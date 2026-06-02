@@ -66,6 +66,6 @@ DrawOOB :: proc(box: OBB, offset := f32(0.01), color := rl.RED) {
 }
 
 OBBIsColliding :: proc(box: OBB) -> bool {
-	for obj in objects do if CheckCollisionOBB(box, obj.box) do return true
+	for obj in objects do if box != obj.box && CheckCollisionOBB(box, obj.box) do return true
 	return false
 }

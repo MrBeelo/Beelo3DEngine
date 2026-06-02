@@ -16,6 +16,6 @@ DrawDebugStrip :: proc(name: string, index: int, args: ..any) {
 DrawDebug :: proc() {
 	if !debug_on do return
 	DrawDebugStrip("FPS", 0, rl.GetFPS())
-    DrawDebugStrip("Player State", 1, player.state)
+    DrawDebugStrip("Player State", 1, game_state)
     DrawDebugStrip("Position", 2, player.pos)
 }

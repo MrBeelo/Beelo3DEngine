@@ -5,8 +5,8 @@ import rl "vendor:raylib"
 
 cube_mesh_cache: map[struct{scale: rl.Vector3, tile: bool}]rl.Mesh
 
-NewCube :: proc(pos: rl.Vector3, rot: rl.Vector3, scale: rl.Vector3, texture := TextureType.GRAY, tile := true, 
-props := ObjectProperties{true, false, true, .XYZ}) -> Object {
+NewCube :: proc(pos: rl.Vector3, rot: rl.Vector3, scale: rl.Vector3, texture := TextureType.GRAY, tile := true, order := MatrixRotationOrder.XYZ,
+props := ObjectProperties{true, false, true, false}) -> Object {
 	mesh: rl.Mesh
 	if cached_mesh, ok := cube_mesh_cache[{scale, tile}]; ok do mesh = cached_mesh; else {
 		mesh = GenCustomCubeMesh(scale, tile)
@@ -14,7 +14,7 @@ props := ObjectProperties{true, false, true, .XYZ}) -> Object {
 	}
 	model := rl.LoadModelFromMesh(mesh)
 	model.materials[0].maps[0].texture = textures[texture]
-	return Object{pos, rot, model, GetCubeOBB(pos, rot, scale, props.rotation_order), props}
+	return Object{pos, rot, model, GetCubeOBB(pos, rot, scale, order), order, props}
 }
 
 GetCubeOBB :: proc(pos: rl.Vector3, rot: rl.Vector3, scale: rl.Vector3, order: MatrixRotationOrder) -> OBB {

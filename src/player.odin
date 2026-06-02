@@ -7,7 +7,6 @@ SENSITIVITY: f32 : 0.003
 BASE_SPEED: f32 : 3
 
 Player :: struct {
-	state: enum{NORMAL, FREECAM},
 	camera: rl.Camera,
 	pos: rl.Vector3,
 	vel: rl.Vector3,
@@ -16,26 +15,29 @@ Player :: struct {
 }
 
 NewPlayer :: proc() -> Player {
-	return Player{.FREECAM, {{0, 0.5, 0}, {1, 0.5, 1}, {0, 1, 0}, 60, .PERSPECTIVE}, {0, 0.5, 0}, {1, 0, 1}, 0, 0}
+	return Player{{{0, 0.5, 0}, {1, 0.5, 1}, {0, 1, 0}, 60, .PERSPECTIVE}, {0, 0.5, 0}, {1, 0, 1}, 0, 0}
 }
 
 UpdatePlayer :: proc(plr: ^Player) {
 	speed := rl.GetFrameTime() * BASE_SPEED * (2 if rl.IsKeyDown(.LEFT_SHIFT) else 1)
-	plr.rot.x -= rl.GetMouseDelta().x * SENSITIVITY
-	plr.rot.y = max(-1.57, min(1.57, plr.rot.y - rl.GetMouseDelta().y * SENSITIVITY))
+	mouse_delta := rl.GetMouseDelta() if !menu_active else 0
+	plr.rot.x -= mouse_delta.x * SENSITIVITY
+	plr.rot.y = max(-1.57, min(1.57, plr.rot.y - mouse_delta.y * SENSITIVITY))
 	plr.dir = {math.cos(plr.rot.y) * math.sin(plr.rot.x), math.sin(plr.rot.y), math.cos(plr.rot.y) * math.cos(plr.rot.x)}
 	
 	forward := f32(int(rl.IsKeyDown(.W)) - int(rl.IsKeyDown(.S)))
 	sideward := f32(int(rl.IsKeyDown(.D)) - int(rl.IsKeyDown(.A)))
 	upward := f32(int(rl.IsKeyDown(.SPACE)) - int(rl.IsKeyDown(.LEFT_CONTROL)))
 	
+	if menu_active do forward, sideward, upward = 0, 0, 0
+	
 	ysin, ycos := math.sin(plr.rot.x), math.cos(plr.rot.x)
-	psin := math.sin(plr.rot.y) if plr.state == .FREECAM else 0
-	pcos := math.cos(plr.rot.y) if plr.state == .FREECAM else 1
+	psin := math.sin(plr.rot.y) if game_state == .FREECAM else 0
+	pcos := math.cos(plr.rot.y) if game_state == .FREECAM else 1
 	plr.vel = 0
 		
 	plr.vel += {(pcos * ysin * forward), (psin * forward), (pcos * ycos * forward)} * speed // W / S
-	plr.vel += {(-ycos * sideward), upward if plr.state == .FREECAM else 0, (ysin * sideward)} * speed // Other Buttons
+	plr.vel += {(-ycos * sideward), upward if game_state == .FREECAM else 0, (ysin * sideward)} * speed // Other Buttons
 	
 	plr.pos += plr.vel // ! Stop this if the player shouldn't be able to move
 	
