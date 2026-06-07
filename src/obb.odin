@@ -1,5 +1,6 @@
 package main
 
+import "core:math"
 import rl "vendor:raylib"
 
 OBB :: struct {
@@ -47,6 +48,30 @@ CheckCollisionOBB :: proc(box1, box2: OBB) -> bool {
 	
 	for axis in axes do if !CheckOBBPointOverlap(ProjectOBB(box1, axis), ProjectOBB(box2, axis)) do return false
 	return true
+}
+
+CheckCollisionSphereOBB :: proc(sphere: Sphere, box: OBB) -> bool {
+	rel := sphere.center - box.center
+
+    local := rl.Vector3{
+        rl.Vector3DotProduct(rel, box.axis[0]),
+        rl.Vector3DotProduct(rel, box.axis[1]),
+        rl.Vector3DotProduct(rel, box.axis[2]),
+    }
+
+    closest := rl.Vector3{
+        math.clamp(local.x, -box.half_size.x, box.half_size.x),
+        math.clamp(local.y, -box.half_size.y, box.half_size.y),
+        math.clamp(local.z, -box.half_size.z, box.half_size.z),
+    }
+
+    delta := local - closest
+    return rl.Vector3DotProduct(delta, delta) <= sphere.radius * sphere.radius
+}
+
+CheckCollisionCapsuleOBB :: proc(capsule: Capsule, box: OBB) -> bool {
+	for sphere in get_spheres(capsule) do if CheckCollisionSphereOBB(sphere, box) do return true
+	return false
 }
 
 DrawOOB :: proc(box: OBB, offset := f32(0.01), color := rl.RED) {

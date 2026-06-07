@@ -4,23 +4,31 @@ import "core:math"
 import rl "vendor:raylib"
 
 SENSITIVITY: f32 : 0.003
-BASE_SPEED: f32 : 3
+BASE_SPEED: f32 : 1.3
+GRAVITY :: 2.2
+TERMINAL_VELOCITY :: 3
 
 Player :: struct {
 	camera: rl.Camera,
 	pos: rl.Vector3,
 	vel: rl.Vector3,
 	dir: rl.Vector3,
-	rot: rl.Vector2
+	rot: rl.Vector2,
+	capsule: Capsule,
+	active: bool
 }
 
-NewPlayer :: proc() -> Player {
-	return Player{{{0, 0.5, 0}, {1, 0.5, 1}, {0, 1, 0}, 60, .PERSPECTIVE}, {0, 0.5, 0}, {1, 0, 1}, 0, 0}
+GetPlayerCapsule :: proc(pos: rl.Vector3) -> Capsule { 
+	return { {pos, pos - {0, 0.2, 0}, pos - {0, 0.4, 0}}, 0.1 }
+}
+
+NewPlayer :: proc() -> Player { 
+	return Player{{{0, 0.5, 0}, {1, 0.5, 1}, {0, 1, 0}, 60, .PERSPECTIVE}, {0, 0.5, 0}, {1, 0, 1}, 0, 0, Capsule{0, 0}, true} 
 }
 
 UpdatePlayer :: proc(plr: ^Player) {
 	speed := rl.GetFrameTime() * BASE_SPEED * (2 if rl.IsKeyDown(.LEFT_SHIFT) else 1)
-	mouse_delta := rl.GetMouseDelta() if !menu_active else 0
+	mouse_delta := rl.GetMouseDelta() if plr.active else 0
 	plr.rot.x -= mouse_delta.x * SENSITIVITY
 	plr.rot.y = max(-1.57, min(1.57, plr.rot.y - mouse_delta.y * SENSITIVITY))
 	plr.dir = {math.cos(plr.rot.y) * math.sin(plr.rot.x), math.sin(plr.rot.y), math.cos(plr.rot.y) * math.cos(plr.rot.x)}
@@ -29,8 +37,8 @@ UpdatePlayer :: proc(plr: ^Player) {
 	sideward := f32(int(rl.IsKeyDown(.D)) - int(rl.IsKeyDown(.A)))
 	upward := f32(int(rl.IsKeyDown(.SPACE)) - int(rl.IsKeyDown(.LEFT_CONTROL)))
 	
-	if menu_active do forward, sideward, upward = 0, 0, 0
-	
+	if !plr.active do forward, sideward, upward = 0, 0, 0
+		
 	ysin, ycos := math.sin(plr.rot.x), math.cos(plr.rot.x)
 	psin := math.sin(plr.rot.y) if game_state == .FREECAM else 0
 	pcos := math.cos(plr.rot.y) if game_state == .FREECAM else 1
@@ -39,10 +47,29 @@ UpdatePlayer :: proc(plr: ^Player) {
 	plr.vel += {(pcos * ysin * forward), (psin * forward), (pcos * ycos * forward)} * speed // W / S
 	plr.vel += {(-ycos * sideward), upward if game_state == .FREECAM else 0, (ysin * sideward)} * speed // Other Buttons
 	
-	plr.pos += plr.vel // ! Stop this if the player shouldn't be able to move
+	//plr.pos += plr.vel // ! Stop this if the player shouldn't be able to move
+	
+	if game_state == .NORMAL && plr.vel.y > -TERMINAL_VELOCITY do plr.vel.y -= GRAVITY * rl.GetFrameTime()
+	
+	npos: rl.Vector3
+	order := [3]int{0, 2, 1}
+	for i in order {
+		npos = plr.pos
+		npos[i] += plr.vel[i]
+		collided := false
+		for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos), obj.box) { collided = true; break }
+		
+		if collided && i != 1 {
+			step := npos + {0, 0.005, 0}
+			can_step := true
+			for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(step), obj.box) { can_step = false; break }
+			if can_step do plr.pos = step
+		} else if !collided { plr.pos[i] = npos[i]; plr.capsule = GetPlayerCapsule(plr.pos) }
+	}
 	
 	plr.camera.position = plr.pos
 	plr.camera.target = plr.pos + plr.dir
+	plr.capsule = GetPlayerCapsule(plr.pos)
 }
 
 DrawCrosshair :: proc() {
