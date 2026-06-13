@@ -18,4 +18,5 @@ DrawDebug :: proc() {
 	DrawDebugStrip("FPS", 0, rl.GetFPS())
     DrawDebugStrip("Player State", 1, game_state)
     DrawDebugStrip("Position", 2, player.pos)
+    DrawDebugStrip("Velocity", 3, player.vel)
 }
