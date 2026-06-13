@@ -22,13 +22,12 @@ main :: proc() {
     player = NewPlayer()
     
     append(&objects, NewCube({2, 0, 2}, {30, 0, 0}, {1, 1, 2}, .RED))
-    append(&objects, NewCube({3, 0, 3}, {0, 0, 30}, {1, 1, 2}, .GREEN))
+    append(&objects, NewCube({3, -0.25, 3}, {0, 0, 30}, {1, 1, 2}, .GREEN))
     append(&objects, NewCube({0, -0.05, 0}, {}, {20, 0.1, 20}, .GRAY))
         
     for !rl.WindowShouldClose() {
     	UpdatePlayer(&player)
      	if rl.IsKeyPressed(.F3) do debug_on = !debug_on
-      	if rl.IsKeyPressed(.N) do append(&objects, NewCube({round_half(player.pos.x), round_half(player.pos.y), round_half(player.pos.z)}, 0, 1, .GRAY))
        	if rl.IsKeyPressed(.ENTER) do if game_state == .NORMAL do game_state = .FREECAM; else do game_state = .NORMAL
      
         rl.BeginTextureMode(game_texture)

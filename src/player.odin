@@ -46,74 +46,11 @@ UpdatePlayer :: proc(plr: ^Player) {
 		
 	plr.vel += {(pcos * ysin * forward), (psin * forward), (pcos * ycos * forward)} * speed // W / S
 	plr.vel += {(-ycos * sideward), upward if game_state == .FREECAM else 0, (ysin * sideward)} * speed // Other Buttons
-	
-	//plr.pos += plr.vel // ! Stop this if the player shouldn't be able to move
-	
+		
 	if game_state == .NORMAL && plr.vel.y > -TERMINAL_VELOCITY do plr.vel.y -= GRAVITY * rl.GetFrameTime()
 	
-	npos := plr.pos
-	npos.xz += plr.vel.xz
-	collided := false
-	for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos), obj.box) { collided = true; break }
-	/*if collided {
-		for j in 1..=10 {
-			step := f32(j) / 1000
-			can_step := true
-			for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos + {0, step, 0}), obj.box) { can_step = false; break }
-			if can_step { npos.y += step; collided = false; break }
-		}
-	}
-	
-	if !collided {
-		for j := 10; j >= 1; j -= 1 {
-			backstep := f32(j) / 1000
-			can_backstep := true
-			for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos - {0, backstep, 0}), obj.box) { can_backstep = false; break }
-			if can_backstep { npos.y -= backstep; break }
-		}
-		}*/
-		
-	CHECKS :: f32(10)
-	for j in -CHECKS..=CHECKS {
-		if j == 0 do continue
-		y_change := f32(j) / 1000
-		collision, down_collision_exists := false, false
-		for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos + {0, y_change, 0}), obj.box) { collision = true; break }
-		if j < 0 do for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos - {0, 0.01, 0}), obj.box) { down_collision_exists = true; break }
-		if j < 0 && !collided && !collision && down_collision_exists { npos.y += y_change; break }
-		if j > 0 && collided && !collision { npos.y += y_change; collided = false; break }
-	}
-	
-	if !collided { plr.pos = npos; plr.capsule = GetPlayerCapsule(plr.pos) }
-	
-	/*for i := 0; i <= 2; i += 2 {
-		npos = plr.pos
-		npos[i] += plr.vel[i]
-		collided = false
-		for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos), obj.box) { collided = true; break }
-		if !collided { plr.pos = npos; plr.capsule = GetPlayerCapsule(plr.pos) }
-		}*/
-	
-	npos = plr.pos
-	npos.y += plr.vel.y
-	collided = false
-	for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos), obj.box) { collided = true; break }
-	if !collided do plr.pos = npos; else do plr.vel.y = 0
-	
-	
-	/*for i in 0..=2 {
-		npos = plr.pos
-		npos[i] += plr.vel[i]
-		collided := false
-		for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(npos), obj.box) { collided = true; break }
-		
-		if collided && i != 1 {
-			step := npos + {0, 0.005, 0}
-			can_step := true
-			for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(step), obj.box) { can_step = false; break }
-			if can_step do plr.pos = step
-		} else if !collided { plr.pos[i] = npos[i]; plr.capsule = GetPlayerCapsule(plr.pos) }
-		}*/
+	move_order := [3]u8{0, 2, 1}
+	for axis in move_order do MovePlayer(plr, axis)
 	
 	plr.camera.position = plr.pos
 	plr.camera.target = plr.pos + plr.dir
@@ -129,4 +66,32 @@ DrawCrosshair :: proc() {
 	LINE_THICKNESS :: 2
 	rl.DrawLineEx({OFFSET_X, DSCR_Y}, {SCREEN_SIZE.x - OFFSET_X, DSCR_Y}, LINE_THICKNESS, rl.BLACK)
 	rl.DrawLineEx({DSCR_X, OFFSET_Y}, {DSCR_X, SCREEN_SIZE.y - OFFSET_Y}, LINE_THICKNESS, rl.BLACK)
+}
+
+CheckCollisionWithObjects :: proc(plr_pos: rl.Vector3) -> bool {
+	for obj in objects do if CheckCollisionCapsuleOBB(GetPlayerCapsule(plr_pos), obj.box) do return true
+	return false
+}
+
+MovePlayer :: proc(plr: ^Player, axis: u8) {
+	if axis >= 3 do return
+	npos := plr.pos
+	npos[axis] += plr.vel[axis]
+	collided := false
+	if CheckCollisionWithObjects(npos) do collided = true
+	
+	if axis != 1 && game_state == .NORMAL {
+		CHECKS :: f32(10)
+		for j in -CHECKS..=CHECKS {
+			if j == 0 do continue
+			y_change := f32(j) / 1000
+			collision, down_collision_exists := false, false
+			if CheckCollisionWithObjects(npos + {0, y_change, 0}) do collision = true
+			if j < 0 do if CheckCollisionWithObjects(npos - {0, CHECKS / 1000, 0}) do down_collision_exists = true
+			if j < 0 && !collided && !collision && down_collision_exists { npos.y += y_change; break }
+			if j > 0 && collided && !collision { npos.y += y_change; collided = false; break }
+		}
+	}
+	
+	if !collided { plr.pos = npos; plr.capsule = GetPlayerCapsule(plr.pos) } else if axis == 1 do plr.vel.y = 0
 }
